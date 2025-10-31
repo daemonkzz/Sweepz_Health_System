@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.min.js"></script>
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+	<link rel="stylesheet"
+		href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+	<link rel="stylesheet" href="style.css" />
+	<title>Document</title>
+</head>
+
+<body>
+	<div id="app">
+		<div class="oynatbeni" v-show="!this.general.show && !this.babapro" style="position: absolute; right: 2vw; top: 20vw;">
+			<div class="itemsBox" v-show="this.general.iskelet">
+				<span style="opacity: 0;" class="LboxHeader"> {{getTranslate.damageStatus}} </span>
+				<div style="background: transparent; border: none;" class="bodyStatus">
+					<img v-for="(value, key) in targetData" :key="key" :src="getImageSrc(key, value)"
+						style="position:absolute;object-fit:contain;max-width:100%;" />
+				</div>
+			</div>
+		</div>
+		<div class="camFix" v-if="this.general.show">
+			<div class="deadButton" @click="camClick('dead')"><span class="material-symbols-outlined"> skull </span>
+			</div>
+			<div class="aliveButton" @click="camClick('alive')"><span class="material-symbols-outlined"> directions_run
+				</span></div>
+		</div>
+		<div class="generalBox" v-if="this.general.show">
+			<section id="menu">
+				<section class="left_side">
+					<div class="header">
+						<p>{{getTranslate.title1}}</p>
+						<span>{{getTranslate.title2}}</span>
+					</div>
+					<div class="itemsBox">
+						<span class="box2Header"> {{getTranslate.healingItemYouHave}} </span>
+						<div class="items_tables">
+							<div class="item" v-for="(item, index) in this.doctorItems" :key="index"
+								:id="'draggable' + index" :data-itemInfo="JSON.stringify(item)" draggable="true">
+								<div class="item_img">
+									<img :src="item.image" />
+								</div>
+								<div class="item_info">
+									<div class="itemInfoTextArea">
+										<p>{{item.label}}</p>
+										<span>{{item.description}}</span>
+									</div>
+									<div class="itemAmountInfo">
+										<p>{{item.amount}}</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="itemsBox">
+						<span class="boxHeader"> {{getTranslate.healthOfBodyParts}} </span>
+						<div class="parts">
+							<div class="part">
+								<span>{{getTranslate.head}} </span>
+								<img src="img/head.png" />
+								<p>%{{getRemainingHealthOfParts.Head}}</p>
+							</div>
+							<div class="part">
+								<span>{{getTranslate.body}} </span>
+								<img src="img/sine.png" />
+								<p>%{{getRemainingHealthOfParts.Body}}</p>
+							</div>
+							<div class="part">
+								<span>{{getTranslate.leftArm}} </span>
+								<img src="img/larm.png" />
+								<p>%{{getRemainingHealthOfParts.LeftArm}}</p>
+							</div>
+							<div class="part">
+								<span>{{getTranslate.rightArm}} </span>
+								<img src="img/rarm.png" />
+								<p>%{{getRemainingHealthOfParts.RightArm}}</p>
+							</div>
+							<div class="part">
+								<span>{{getTranslate.leftLeg}} </span>
+								<img src="img/lleg.png" />
+								<p>%{{getRemainingHealthOfParts.LeftLeg}}</p>
+							</div>
+							<div class="part">
+								<span>{{getTranslate.rightLeg}} </span>
+								<img src="img/rleg.png" />
+								<p>%{{getRemainingHealthOfParts.RightLeg}}</p>
+							</div>
+						</div>
+					</div>
+				</section>
+				<section class="right_side">
+					<div class="warn">
+						<img src="img/warn.svg" />
+						<span>{{getTranslate.warn1}}</span>
+					</div>
+					<div class="itemsBox">
+						<span class="LboxHeader"> {{getTranslate.damageStatus}} </span>
+						<div class="bodyStatus">
+							<img v-for="(value, key) in targetData" :key="key" :src="getImageSrc(key, value)"
+								style="position:absolute;object-fit:contain;max-width:100%;" />
+						</div>
+					</div>
+					<div class="itemsBox lowheight">
+						<span class="LboxHeader">{{getTranslate.damageSource}}</span>
+						<div class="sourceDamages">
+							<div class="Damage" v-for="(item, index) in getGeneralDamageTaken" :key="index">
+								<span>{{item.count}}</span>
+								<p>{{item.type}}</p>
+							</div>
+						</div>
+					</div>
+					<div v-if="this.general.reviveBtn" class="warn">
+						<img src="img/warn.svg" />
+						<span>{{getTranslate.warn2}}</span>
+					</div>
+					<div class="reviveBtn" v-if="this.general.reviveBtn" @click="revivePlayer">{{getTranslate.revive}}
+					</div>
+				</section>
+			</section>
+			<section class="locations" v-show="this.general.playerOnScreen">
+				<div class="locationsBox" :style="getStyle('Head', 'right')">
+					<div class="locationName left" id="droppable-Head">
+						<div class="locationBoxKutu">+</div>
+						<div class="row">
+							<p>{{getTranslate.head}}</p>
+							<span>{{getRemainingHealthOfParts.Head}}% {{getTranslate.health}}</span>
+						</div>
+					</div>
+					<img src="img/line.svg" />
+				</div>
+
+				<div class="locationsBox right" :style="getStyle('Body' , 'left')">
+					<div class="locationName right" id="droppable-Body">
+						<div class="locationBoxKutu">+</div>
+						<div class="row">
+							<p>{{getTranslate.body}}</p>
+							<span>{{getRemainingHealthOfParts.Body}}% {{getTranslate.health}}</span>
+						</div>
+					</div>
+					<img src="img/lineLeft.svg" />
+				</div>
+
+				<div class="locationsBox left" :style="getStyle('LeftArm' , 'left')">
+					<div class="locationName right" id="droppable-LeftArm">
+						<div class="locationBoxKutu">+</div>
+						<div class="row">
+							<p>{{getTranslate.leftArm}}</p>
+							<span>{{getRemainingHealthOfParts.LeftArm}}% {{getTranslate.health}}</span>
+						</div>
+					</div>
+					<img src="img/lineLeft.svg" />
+				</div>
+
+				<div class="locationsBox" :style="getStyle('RightArm', 'right')">
+					<div class="locationName left" id="droppable-RightArm">
+						<div class="locationBoxKutu">+</div>
+						<div class="row">
+							<p>{{getTranslate.rightArm}}</p>
+							<span>{{getRemainingHealthOfParts.RightArm}}% {{getTranslate.health}}</span>
+						</div>
+					</div>
+					<img src="img/line.svg" />
+				</div>
+
+				<div class="locationsBox left" :style="getStyle('LeftLeg', 'left')">
+					<div class="locationName right" id="droppable-LeftLeg">
+						<div class="locationBoxKutu">+</div>
+						<div class="row">
+							<p>{{getTranslate.leftLeg}}</p>
+							<span>{{getRemainingHealthOfParts.LeftLeg}}% {{getTranslate.health}}</span>
+						</div>
+					</div>
+					<img src="img/lineLeft.svg" />
+				</div>
+
+				<div class="locationsBox" :style="getStyle('RightLeg', 'right')">
+					<div class="locationName left" id="droppable-RightLeg">
+						<div class="locationBoxKutu">+</div>
+						<div class="row">
+							<p>{{getTranslate.rightLeg}}</p>
+							<span>{{getRemainingHealthOfParts.RightLeg}}% {{getTranslate.health}}</span>
+						</div>
+					</div>
+					<img src="img/line.svg" />
+				</div>
+			</section>
+		</div>
+	</div>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+	<script src="./app.js"></script>
+</body>
+
+</html>
